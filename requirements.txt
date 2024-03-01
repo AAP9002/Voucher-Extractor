@@ -1,0 +1,7 @@
+Pillow==9.0.1
+Pillow==10.2.0
+python-dotenv==1.0.1
+reportlab==3.6.8
+Requests==2.31.0
+selenium==4.18.1
+tqdm==4.66.2
