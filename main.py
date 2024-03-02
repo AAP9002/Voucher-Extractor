@@ -6,7 +6,8 @@ from urllib.parse import urlparse, parse_qs
 from selenium import webdriver
 from PIL import Image
 from dotenv import load_dotenv, dotenv_values
-from rich.progress import Progress
+from rich.progress import Progress, SpinnerColumn, TimeElapsedColumn
+import sys
 
 
 load_dotenv()
@@ -146,11 +147,17 @@ class FfHandler:
 
 target_count = int(input("Enter the number of accounts to create (MAX 99 A DAY): "))
 
+print("Starting...")
+
 eS = emailService()
 ff = FfHandler()
 eS.create_email()
 
-with Progress() as progress:
+with Progress(
+    SpinnerColumn(),
+    *Progress.get_default_columns(),
+    TimeElapsedColumn(),
+    ) as progress:
     wholeProgress = progress.add_task("[green]Jobs...", total=target_count)
 
     for i in range(target_count):
@@ -184,3 +191,8 @@ with Progress() as progress:
         progress.update(wholeProgress, advance=1)
 
 print("All Completed")
+print("\a")
+time.sleep(0.5)
+print("\a")
+time.sleep(0.5)
+print("\a")
