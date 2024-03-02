@@ -5,8 +5,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python Version](https://img.shields.io/badge/python-3.x-blue.svg)](https://www.python.org/downloads/)
 [![GitHub Issues](https://img.shields.io/github/issues/AAP9002/Voucher-Extractor.svg)](https://github.com/AAP9002/Voucher-Extractor/issues)
-[![GitHub Stars](https://img.shields.io/github/stars/AAP9002/Voucher-Extractor.svg)](https://github.com/AAP9002/Voucher-Extractor/stargazers)
-[![GitHub Forks](https://img.shields.io/github/forks/AAP9002/Voucher-Extractor.svg)](https://github.com/AAP9002/Voucher-Extractor/network)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-orange.svg)](CONTRIBUTING.md)
 
 This project aims to automate the extraction of vouchers from emails, process them, and generate a PDF containing the extracted vouchers. The process involves creating a disposable email using an API, running automation scripts to create, confirm, screenshot, process, and unsubscribe from services that send vouchers via email. Additionally, there is a separate script to generate a PDF populated with the extracted vouchers.
