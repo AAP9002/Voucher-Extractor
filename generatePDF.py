@@ -61,9 +61,8 @@ if __name__ == "__main__":
     # Paths to the images
     directory = 'bin/image_temp'
     image_paths = [directory+"/"+x for x in get_image_file_names(directory)]
-    # image_paths = ["bin/image_temp/0.png", "bin/image_temp/1.png", "bin/image_temp/2.png", "bin/image_temp/3.png", "bin/image_temp/4.png", "bin/image_temp/5.png"]  # Add your image paths here
 
     # Output PDF file
-    output_pdf = "stacked_images.pdf"
+    output_pdf = "bin/output.pdf"
 
     create_stacked_images_pdf(image_paths, output_pdf)

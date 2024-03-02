@@ -19,6 +19,9 @@ APIKEY = config["RAPIDKEY"]
 APILIMIT = config["APILIMIT"]
 EXPRECTEDSUBJECT = config["EXPRECTEDSUBJECT"]
 
+MIN_DELAY = 5
+MAX_DELAY = 10
+
 def extract_id(text):
     # Regular expression to match URLs
     url_pattern = r'https?://\S+'
@@ -46,13 +49,11 @@ def call_api(url):
     driver.quit()
 
 def sleep():
-    duration = random.randint(5, 10)
+    duration = random.randint(MIN_DELAY, MAX_DELAY)
     time.sleep(duration)
 
-class emailService:
-    def __init__(self):
-        self.callCount = 0
 
+class emailService:
     def create_email(self):
         url = "https://temp-mail44.p.rapidapi.com/api/v3/email/new"
         payload = {
@@ -64,13 +65,16 @@ class emailService:
             "X-RapidAPI-Key": APIKEY,
             "X-RapidAPI-Host": "temp-mail44.p.rapidapi.com"
         }
-
-        response = requests.post(url, json=payload, headers=headers)
-        self.callCount += 1
-
-        print("Email Created: ")
-        print(response.json())
-        self.email_address = response.json()['email']
+        try:
+            response = requests.post(url, json=payload, headers=headers)
+            if(response.status_code == 429):
+                print("########## API Limit Reached ##########")
+                exit()
+            self.email_address = response.json()['email']
+            print("Email Created: "+self.email_address)
+        except Exception as e:
+            print("error:", e)
+            exit(1)
 
     def get_email(self):
         return self.email_address
@@ -91,8 +95,10 @@ class emailService:
 
         try:
             response = requests.get(url, headers=headers)
-            self.callCount += 1
-            # print(response.json())
+
+            if(response.status_code == 429):
+                print("########## API Limit Reached ##########")
+                exit(1)
 
             subject = response.json()[-1]['subject']
             if subject == EXPRECTEDSUBJECT:
@@ -140,12 +146,13 @@ class FfHandler:
         print("Vouchers Extracted")
 
 target_count = int(input("Enter the number of accounts to create (MAX 80 A DAY): "))
-call_count_hard_limit = int(input("Enter the hard limit of API calls (-1 for default of "+APILIMIT+"): "))
 
-if call_count_hard_limit != -1:
-    APILIMIT = call_count_hard_limit
-
-progress_bar = tqdm(total=target_count, desc="Progress", position=0, leave=True, dynamic_ncols=True)
+progress_bar = tqdm(total=target_count, desc="Progress", position=0, leave=True, dynamic_ncols=True, stick_to_bottom=True)
+while(True):
+    time.sleep(2)
+    print("hi")
+    progress_bar.update(1)
+exit()
 
 eS = emailService()
 ff = FfHandler()
@@ -153,7 +160,7 @@ eS.create_email()
 
 count = 0
 
-while (count<target_count) and (eS.get_call_count() < APILIMIT):
+while (count<target_count):
     ff.sign_up_account(eS.get_email())
     sleep()
     id = eS.get_email_list()
@@ -163,9 +170,9 @@ while (count<target_count) and (eS.get_call_count() < APILIMIT):
         ff.take_screenshot(eS.get_email(), id, 'bin/ss.png')
         ff.getVouchers('bin/ss.png', 'bin/image_temp/'+str(count)+'.png')
         count += 1
-        progress_bar.update(1)
         sleep()
         ff.unsubscribe_account(eS.get_email(), id)
+        progress_bar.update(1)
         sleep()
     else:
         print("No email found")

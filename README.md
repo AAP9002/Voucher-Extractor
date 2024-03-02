@@ -19,10 +19,12 @@ This project aims to automate the extraction of vouchers from emails, process th
 - **PDF Generation**: Generates a PDF file populated with the extracted vouchers.
 
 ## Setup Instructions
+We are using the [Temp Mail API](https://rapidapi.com/calvinloveland335703-0p6BxLYIH8f/api/temp-mail44)
 
 1. Clone the repository to your local machine.
-2. Install dependencies using `pip install -r requirements.txt`.
+2. run `pip3 install -r requirements.txt` to install the required Python libraries.
 3. Configure the API credentials for creating disposable emails.
+3. Set up `.env` using the `.env.template` file.
 4. Adjust the automation script settings according to your requirements.
 5. Run the automation script to start the extraction process.
 6. Use the separate script to generate a PDF containing the extracted vouchers.
@@ -31,18 +33,19 @@ This project aims to automate the extraction of vouchers from emails, process th
 
 1. Run the automation script `./run.sh`.
 2. Monitor the process as it creates disposable emails, confirms services, screenshots vouchers, processes them, and unsubscribes from services.
-3. Once the extraction process is complete, run the script `generatePdf.sh` to generate a PDF containing the extracted vouchers.
+3. Find the pdf at `./bin/output.pdf` containing the extracted vouchers.
+
+> **Note**: The run script will clear all files in the `./bin` directory before starting the process.
+
+> **Warning**: Each request to the Temp Mail API costs 1 credit. Each run will use (n+1) requests with n being the number of voucher accounts. The free plan provides 100 credits per month. You can upgrade to a paid plan for more credits. Check quota usage on the [RapidAPI Dashboard](https://rapidapi.com/developer/billing/subscriptions-and-usage). Once quota reached, the API will return "quota reached" and the script will stop.
+
+> **Note**: Each web request has a random delay to avoid bot detection. The delay can be adjusted in the automation script.
 
 ## Dependencies
 
 - Python 3.x
 - Required Python libraries (specified in `requirements.txt`)
 
-## Configuration
-
-- Set up API credentials for the disposable email service.
-- Configure settings in the automation script according to your preferences.
-- Ensure proper configuration for the PDF generation script.
 
 ## Contribution
 
