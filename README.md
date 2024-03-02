@@ -17,6 +17,9 @@ This project aims to automate the extraction of vouchers from emails, process th
 - **Automation**: Automatically handles the entire process from email creation to unsubscribing from services.
 - **Voucher Extraction**: Extracts vouchers from received emails.
 - **PDF Generation**: Generates a PDF file populated with the extracted vouchers.
+  
+![image](https://github.com/AAP9002/Voucher-Extractor/assets/42409957/448e174b-22b9-449b-b982-cfd10cfe8deb)
+
 
 ## Setup Instructions
 We are using the [Temp Mail API](https://rapidapi.com/calvinloveland335703-0p6BxLYIH8f/api/temp-mail44)
