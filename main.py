@@ -1,9 +1,7 @@
 import time
-import requests
 import random
-import string
 import re
-import sys
+import requests
 from urllib.parse import urlparse, parse_qs
 from selenium import webdriver
 from PIL import Image
@@ -16,7 +14,6 @@ config = dotenv_values(".env")
 
 DOMAIN = config["DOMAIN"]
 APIKEY = config["RAPIDKEY"]
-APILIMIT = config["APILIMIT"]
 EXPRECTEDSUBJECT = config["EXPRECTEDSUBJECT"]
 
 MIN_DELAY = 5
@@ -34,7 +31,7 @@ def extract_id(text):
         parsed_url = urlparse(url)
         query_parameters = parse_qs(parsed_url.query)
         id = query_parameters.get('id', [None])[0]
-        print("URL:", url)
+        # print("URL:", url)
         print("ID:", id)
         if id is not None:
             return id
@@ -54,6 +51,9 @@ def sleep():
 
 
 class emailService:
+    def __init__(self):
+        self.email_address = ""
+
     def create_email(self):
         url = "https://temp-mail44.p.rapidapi.com/api/v3/email/new"
         payload = {
@@ -67,7 +67,7 @@ class emailService:
         }
         try:
             response = requests.post(url, json=payload, headers=headers)
-            if(response.status_code == 429):
+            if response.status_code == 429:
                 print("########## API Limit Reached ##########")
                 exit()
             self.email_address = response.json()['email']
@@ -79,13 +79,10 @@ class emailService:
     def get_email(self):
         return self.email_address
 
-    def get_call_count(self):
-        return self.callCount
-
     def get_email_list(self, manual_email = None):
         if manual_email is not None:
             self.email_address = manual_email
-        
+
         url = "https://temp-mail44.p.rapidapi.com/api/v3/email/"+self.email_address+"/messages"
 
         headers = {
@@ -93,43 +90,45 @@ class emailService:
             "X-RapidAPI-Host": "temp-mail44.p.rapidapi.com"
         }
 
-        try:
-            response = requests.get(url, headers=headers)
+        for i in range(3): # Retry 3 times
+            try:
+                response = requests.get(url, headers=headers)
 
-            if(response.status_code == 429):
-                print("########## API Limit Reached ##########")
-                exit(1)
+                if response.status_code == 429:
+                    print("########## API Limit Reached ##########")
+                    exit(1)
 
-            subject = response.json()[-1]['subject']
-            if subject == EXPRECTEDSUBJECT:
-                body = response.json()[-1]['body_text']
-                print("Email Found")
-                # print("Email Subject: " + subject)
-                # print("Email Body: " + body)
-                return extract_id(body)
-            return None
-        except Exception as e:
-            print("error:", e)
-            return None
+                subject = response.json()[-1]['subject']
+                if subject == EXPRECTEDSUBJECT:
+                    body = response.json()[-1]['body_text']
+                    print("Email Found")
+                    # print("Email Subject: " + subject)
+                    # print("Email Body: " + body)
+                    return extract_id(body)
+            except Exception as e:
+                print("error:", e)
+            print("Retrying in 10 seconds...")
+            time.sleep(10)
+        return None
 
 class FfHandler:
     def sign_up_account(self, email):
-        signUpAPI = DOMAIN + '/includes/mailing_list/join-club.php?email_address=' + email
-        call_api(signUpAPI)
+        sign_up_api = DOMAIN + '/includes/mailing_list/join-club.php?email_address=' + email
+        call_api(sign_up_api)
         print("Account Created")
 
-    def confirm_account(self, email, tempId):
-        confirmEmail = DOMAIN + '/confirm-mailing-list?action=confirm&id='+tempId+'&email_address='+email
-        call_api(confirmEmail)
+    def confirm_account(self, email, temp_id):
+        confirm_email = DOMAIN + '/confirm-mailing-list?action=confirm&id='+temp_id+'&email_address='+email
+        call_api(confirm_email)
         print("Account Confirmed")
 
-    def unsubscribe_account(self, email, tempId):
-        unsubscribe = DOMAIN + '/confirm-mailing-list?action=unsubscribe_confirm&id='+tempId+'&email_address='+email
+    def unsubscribe_account(self, email, temp_id):
+        unsubscribe = DOMAIN + '/confirm-mailing-list?action=unsubscribe_confirm&id='+temp_id+'&email_address='+email
         call_api(unsubscribe)
         print("Account Unsubscribed")
 
-    def take_screenshot(self, email, tempId, output_file):
-        url = DOMAIN + '/Vouchers?id='+tempId+'&email_address='+email
+    def take_screenshot(self, email, temp_id, output_file):
+        url = DOMAIN + '/Vouchers?id='+temp_id+'&email_address='+email
         options = webdriver.ChromeOptions()
         options.add_argument("headless")
         driver = webdriver.Chrome(options)
@@ -139,8 +138,8 @@ class FfHandler:
         driver.quit()
         print("Screenshot Taken")
 
-    def getVouchers(self, imageFile, output_file):
-        im = Image.open(imageFile)
+    def get_vouchers(self, image_file, output_file):
+        im = Image.open(image_file)
         im = im.crop((330, 420, 1250, 725))
         im.save(output_file)
         print("Vouchers Extracted")
@@ -154,32 +153,33 @@ eS.create_email()
 with Progress() as progress:
     wholeProgress = progress.add_task("[green]Jobs...", total=target_count)
 
-    for i in track(range(target_count)):
-        taskProgress = progress.add_task("[red]Voucher {i}...", total=5)
+    for i in range(target_count):
+        taskProgress = progress.add_task("[cyan1]Voucher "+str(i+1)+"/"+str(target_count)+"...", total=5)
         ff.sign_up_account(eS.get_email())
         progress.update(taskProgress, advance=1)
         sleep()
 
-        id = eS.get_email_list()
-        if id is not None:
-            ff.confirm_account(eS.get_email(), id)
+        user_id = eS.get_email_list()
+        if user_id is not None:
+            ff.confirm_account(eS.get_email(), user_id)
             progress.update(taskProgress, advance=1)
             sleep()
 
-            ff.take_screenshot(eS.get_email(), id, 'bin/ss.png')
+            ff.take_screenshot(eS.get_email(), user_id, 'bin/ss.png')
             progress.update(taskProgress, advance=1)
 
-            ff.getVouchers('bin/ss.png', 'bin/image_temp/'+str(i)+'.png')
+            ff.get_vouchers('bin/ss.png', 'bin/image_temp/'+str(i)+'.png')
             progress.update(taskProgress, advance=1)
             sleep()
 
-            ff.unsubscribe_account(eS.get_email(), id)
+            ff.unsubscribe_account(eS.get_email(), user_id)
             progress.update(taskProgress, advance=1)
-            sleep()
+            if i != target_count-1:
+                sleep()
         else:
             print("No email found")
             exit()
-            
+
         progress.remove_task(taskProgress)
         progress.update(wholeProgress, advance=1)
 
