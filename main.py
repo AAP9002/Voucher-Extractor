@@ -1,15 +1,15 @@
 import time
 import requests
-import urllib.parse
 import random
 import string
-import hashlib
 import re
+import sys
 from urllib.parse import urlparse, parse_qs
 from selenium import webdriver
 from PIL import Image
 from dotenv import load_dotenv, dotenv_values
-from tqdm import tqdm
+from rich.progress import Progress
+
 
 load_dotenv()
 config = dotenv_values(".env")
@@ -145,39 +145,42 @@ class FfHandler:
         im.save(output_file)
         print("Vouchers Extracted")
 
-target_count = int(input("Enter the number of accounts to create (MAX 80 A DAY): "))
-
-progress_bar = tqdm(total=target_count, desc="Progress", position=0, leave=True, dynamic_ncols=True, stick_to_bottom=True)
-while(True):
-    time.sleep(2)
-    print("hi")
-    progress_bar.update(1)
-exit()
+target_count = int(input("Enter the number of accounts to create (MAX 99 A DAY): "))
 
 eS = emailService()
 ff = FfHandler()
 eS.create_email()
 
-count = 0
+with Progress() as progress:
+    wholeProgress = progress.add_task("[green]Jobs...", total=target_count)
 
-while (count<target_count):
-    ff.sign_up_account(eS.get_email())
-    sleep()
-    id = eS.get_email_list()
-    if id is not None:
-        ff.confirm_account(eS.get_email(), id)
+    for i in track(range(target_count)):
+        taskProgress = progress.add_task("[red]Voucher {i}...", total=5)
+        ff.sign_up_account(eS.get_email())
+        progress.update(taskProgress, advance=1)
         sleep()
-        ff.take_screenshot(eS.get_email(), id, 'bin/ss.png')
-        ff.getVouchers('bin/ss.png', 'bin/image_temp/'+str(count)+'.png')
-        count += 1
-        sleep()
-        ff.unsubscribe_account(eS.get_email(), id)
-        progress_bar.update(1)
-        sleep()
-    else:
-        print("No email found")
-        sleep()
-        continue
 
-progress_bar.close()
+        id = eS.get_email_list()
+        if id is not None:
+            ff.confirm_account(eS.get_email(), id)
+            progress.update(taskProgress, advance=1)
+            sleep()
+
+            ff.take_screenshot(eS.get_email(), id, 'bin/ss.png')
+            progress.update(taskProgress, advance=1)
+
+            ff.getVouchers('bin/ss.png', 'bin/image_temp/'+str(i)+'.png')
+            progress.update(taskProgress, advance=1)
+            sleep()
+
+            ff.unsubscribe_account(eS.get_email(), id)
+            progress.update(taskProgress, advance=1)
+            sleep()
+        else:
+            print("No email found")
+            exit()
+            
+        progress.remove_task(taskProgress)
+        progress.update(wholeProgress, advance=1)
+
 print("All Completed")
