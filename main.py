@@ -16,9 +16,13 @@ config = dotenv_values(".env")
 DOMAIN = config["DOMAIN"]
 APIKEY = config["RAPIDKEY"]
 EXPRECTEDSUBJECT = config["EXPRECTEDSUBJECT"]
+INVISIBLE_BROWSERS = True
 
-MIN_DELAY = 5
-MAX_DELAY = 10
+# MIN_DELAY = 5
+# MAX_DELAY = 10
+
+MIN_DELAY = 20
+MAX_DELAY = 30
 
 def extract_id(text):
     # Regular expression to match URLs
@@ -39,8 +43,10 @@ def extract_id(text):
     return None
 
 def call_api(url):
+    print(url)
     options = webdriver.ChromeOptions()
-    options.add_argument("headless")
+    if INVISIBLE_BROWSERS:
+        options.add_argument("headless")
     driver = webdriver.Chrome(options)
     driver.set_window_size(1920, 1080)
     driver.get(url)
@@ -54,6 +60,7 @@ def sleep():
 class emailService:
     def __init__(self):
         self.email_address = ""
+        self.last_email_id = ""
 
     def create_email(self):
         url = "https://temp-mail44.p.rapidapi.com/api/v3/email/new"
@@ -99,16 +106,23 @@ class emailService:
                     print("########## API Limit Reached ##########")
                     exit(1)
 
+                # print(response.json())
                 subject = response.json()[-1]['subject']
                 if subject == EXPRECTEDSUBJECT:
                     body = response.json()[-1]['body_text']
                     print("Email Found")
                     # print("Email Subject: " + subject)
                     # print("Email Body: " + body)
-                    return extract_id(body)
+                    user_id =  extract_id(body)
+                    # check not same as iteration email
+                    if user_id is self.last_email_id:
+                        print("same email as last time account: try again")
+                    else:
+                        self.last_email_id = user_id
+                        return user_id
             except Exception as e:
                 print("error:", e)
-            print("Retrying in 10 seconds...")
+            print("Attempt {i} - Retrying in 10 seconds...")
             time.sleep(10)
         return None
 
@@ -131,7 +145,8 @@ class FfHandler:
     def take_screenshot(self, email, temp_id, output_file):
         url = DOMAIN + '/Vouchers?id='+temp_id+'&email_address='+email
         options = webdriver.ChromeOptions()
-        options.add_argument("headless")
+        if INVISIBLE_BROWSERS:
+            options.add_argument("headless")
         driver = webdriver.Chrome(options)
         driver.set_window_size(1920, 1080)
         driver.get(url)
@@ -151,7 +166,6 @@ print("Starting...")
 
 eS = emailService()
 ff = FfHandler()
-eS.create_email()
 
 with Progress(
     SpinnerColumn(),
@@ -161,6 +175,9 @@ with Progress(
     wholeProgress = progress.add_task("[green]Jobs...", total=target_count)
 
     for i in range(target_count):
+        # every 20 change email
+        if i % 20 == 0:
+            eS.create_email()
         taskProgress = progress.add_task("[cyan1]Voucher "+str(i+1)+"/"+str(target_count)+"...", total=5)
         ff.sign_up_account(eS.get_email())
         progress.update(taskProgress, advance=1)
