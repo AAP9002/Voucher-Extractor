@@ -18,11 +18,11 @@ APIKEY = config["RAPIDKEY"]
 EXPRECTEDSUBJECT = config["EXPRECTEDSUBJECT"]
 INVISIBLE_BROWSERS = True
 
-# MIN_DELAY = 5
-# MAX_DELAY = 10
+MIN_DELAY = 5
+MAX_DELAY = 10
 
-MIN_DELAY = 20
-MAX_DELAY = 30
+# MIN_DELAY = 20
+# MAX_DELAY = 30
 
 def extract_id(text):
     # Regular expression to match URLs
@@ -148,7 +148,7 @@ class FfHandler:
         if INVISIBLE_BROWSERS:
             options.add_argument("headless")
         driver = webdriver.Chrome(options)
-        driver.set_window_size(1920, 1080)
+        driver.set_window_size(1920, 2000)
         driver.get(url)
         driver.save_screenshot(output_file)
         driver.quit()
@@ -156,11 +156,12 @@ class FfHandler:
 
     def get_vouchers(self, image_file, output_file):
         im = Image.open(image_file)
-        im = im.crop((330, 420, 1250, 725))
+        # im = im.crop((330, 420, 1250, 725))
+        im = im.crop((330, 420, 1650, 1050))
         im.save(output_file)
         print("Vouchers Extracted")
 
-target_count = int(input("Enter the number of accounts to create (MAX 99 A DAY): "))
+target_count = int(input("Enter the number of accounts to create (MAX 95 A DAY): "))
 
 print("Starting...")
 
